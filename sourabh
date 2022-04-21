@@ -1,0 +1,48 @@
+import { Test } from '@nestjs/testing'
+import { FirebaseAdminModule } from '../../firebase-admin/firebase-admin.module'
+import { NotificationController } from './notification.controller'
+import { NotificationProvider } from './notification.provider'
+import * as admin from 'firebase-admin';
+
+describe('NotificationController', () => {
+  let notificationController: NotificationController
+  let notificationProvider: NotificationProvider
+
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      controllers: [NotificationController],
+      providers: [NotificationProvider],
+      imports: [FirebaseAdminModule],
+    }).compile()
+
+    notificationProvider = moduleRef.get<NotificationProvider>(NotificationProvider)
+    notificationController = moduleRef.get<NotificationController>(NotificationController)
+  })
+  const doc = jest.fn()
+  const collection = jest.spyOn(admin.firestore(),'collection').mockReturnValue(({doc} as unknown) as any);
+
+  const requestMock = {
+    jest.mock('firebase/firestore',() => {
+      update: jest.fn()
+      doc: jest.fn((value) => value)
+      collection:jest.fn(()=>{})
+    })as unknown as any
+  }
+
+
+
+  jest.mock('firebase-admin',()=>{
+    doc: jest.fn()
+    collection:jest.spyOn(admin.firestore(),'collection').mockReturnValue({doc});
+  })
+  describe('read information', () => {
+    // it('should update read status', async () => {
+    //   /** */
+    //   expect(collection).toBe();
+    // })
+    it('should get return status true',async () => {
+      const response = await notificationProvider.updateReadStatus(requestMock)
+      expect (response.success).toHaveBeenCalledWith(true)
+    })
+  })
+})
